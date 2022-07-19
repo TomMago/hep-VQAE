@@ -75,12 +75,12 @@ class QAE_model(Model):
         network_qbits = data_qbits + (data_qbits - latent_qbits)
         qbits = [cirq.GridQubit(0, i) for i in range(network_qbits + 1 + data_qbits)]
 
-        model_circuit = self._build_circuit(qbits[:network_qbits], qbits[network_qbits:-1], data_qbits, latent_qbits, qbits[-1], self.num_layers)
+        self.model_circuit = self._build_circuit(qbits[:network_qbits], qbits[network_qbits:-1], data_qbits, latent_qbits, qbits[-1], self.num_layers)
         readout_operator = [cirq.Z(qbits[-1])]
 
         self.model = tf.keras.Sequential([
             tf.keras.layers.Input(shape=(), dtype=tf.string),
-            tfq.layers.PQC(model_circuit, readout_operator),
+            tfq.layers.PQC(self.model_circuit, readout_operator),
         ])
 
     def _layer(self, qbits):

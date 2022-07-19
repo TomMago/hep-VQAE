@@ -29,6 +29,25 @@ class Autoencoder(Model):
     decoded = self.decoder(encoded)
     return decoded
 
+class Autoencoder1(Model):
+  def __init__(self, input_dim, latent_dim):
+    super(Autoencoder1, self).__init__()
+    self.latent_dim = latent_dim
+    self.encoder = tf.keras.Sequential([
+      layers.Input(shape=(input_dim,)),
+      layers.Dense(input_dim//10, activation='relu'),
+      layers.Dense(latent_dim, activation='relu'),
+    ])
+    self.decoder = tf.keras.Sequential([
+      layers.Dense(input_dim//10, activation='relu'),
+      layers.Dense(input_dim, activation='sigmoid'),
+    ])
+
+  def call(self, x):
+    encoded = self.encoder(x)
+    decoded = self.decoder(encoded)
+    return decoded
+
 
 class Convolutional_Autoencoder(Model):
   def __init__(self, input_dim):
@@ -49,6 +68,29 @@ class Convolutional_Autoencoder(Model):
     decoded = self.decoder(encoded)
     return decoded
 
+class Convolutional_Autoencoder1(Model):
+  def __init__(self, input_dim):
+    super(Convolutional_Autoencoder1, self).__init__()
+
+    self.encoder = tf.keras.Sequential([
+      layers.Input(shape=(input_dim[0],input_dim[1],1)),
+      layers.Conv2D(32, kernel_size=3, strides=2, activation='relu', padding='same'),
+      layers.Conv2D(16, kernel_size=3, strides=2, activation='relu', padding='same'),
+      layers.Flatten(),
+      layers.Dense(45, activation='sigmoid')])
+
+    self.decoder = tf.keras.Sequential([
+      layers.Dense(7*7*16, activation='relu'),
+      layers.Reshape((7,7,16)),
+      layers.Conv2DTranspose(16, kernel_size=3, strides=2, activation='relu', padding='same'),
+      layers.Conv2DTranspose(32, kernel_size=5, strides=2, activation='relu', padding='same'),
+      layers.Conv2D(1, kernel_size=2, activation='sigmoid', padding='same')])
+
+  def call(self, x):
+    encoded = self.encoder(x)
+    decoded = self.decoder(encoded)
+    return decoded
+
 
 class Convolutional_Autoencoder2(Model):
   def __init__(self, latent_dim):
@@ -56,21 +98,78 @@ class Convolutional_Autoencoder2(Model):
 
     self.encoder = tf.keras.Sequential([
       layers.Input(shape=(125, 125, 3)),
-      layers.Conv2D(8, kernel_size=3, strides=3, activation='relu', padding='same'),
-      layers.Conv2D(16, kernel_size=3, strides=2, activation='relu', padding='valid'),
-      layers.Conv2D(32, kernel_size=3, strides=2, activation='relu', padding='same'),
-      layers.Conv2D(64, kernel_size=3, strides=2, activation='relu', padding='same'),
+      layers.Conv2D(64, kernel_size=3, strides=3, activation='relu', padding='same'),
+      layers.Conv2D(32, kernel_size=3, strides=2, activation='relu', padding='valid'),
+      layers.Conv2D(30, kernel_size=3, strides=2, activation='relu', padding='same'),
+      layers.Conv2D(10, kernel_size=3, strides=2, activation='relu', padding='same')])#,
+      #layers.Flatten(),
+      #layers.Dense(latent_dim, activation='sigmoid')])
+
+    self.decoder = tf.keras.Sequential([
+      #layers.Dense(5*5*10, activation='relu'),
+      #layers.Reshape((5, 5, 30)),
+      layers.Conv2DTranspose(10, kernel_size=3, strides=3, activation='relu', padding='valid'),# after 14
+      layers.Conv2DTranspose(30, kernel_size=3, strides=2, activation='relu', padding='valid'),# after: 20
+      layers.Conv2DTranspose(32, kernel_size=3, strides=2, activation='relu', padding='same'),# after: 40
+      layers.Conv2DTranspose(64, kernel_size=3, strides=2, activation='relu', padding='valid'),# after : 120
+      layers.Conv2D(3, kernel_size=2, activation='sigmoid', padding='same')])
+
+  def call(self, x):
+    encoded = self.encoder(x)
+    decoded = self.decoder(encoded)
+    return decoded
+
+class Convolutional_Autoencoder3(Model):
+  def __init__(self, latent_dim):
+    super(Convolutional_Autoencoder3, self).__init__()
+
+    self.encoder = tf.keras.Sequential([
+      layers.Input(shape=(32, 32, 1)),
+      layers.Conv2D(10, kernel_size=4, strides=1, activation='relu', padding='same'),
+      layers.Conv2D(10, kernel_size=4, strides=2, activation='relu', padding='same'),
+      layers.Conv2D(10, kernel_size=4, strides=2, activation='relu', padding='same'),
+      layers.Conv2D(10, kernel_size=2, strides=2, activation='relu', padding='same'),#,
       layers.Flatten(),
       layers.Dense(latent_dim, activation='sigmoid')])
 
     self.decoder = tf.keras.Sequential([
-      layers.Dense(5*5*64, activation='relu'),
-      layers.Reshape((5, 5, 64)),
-      layers.Conv2DTranspose(64, kernel_size=3, strides=3, activation='relu', padding='valid'),# after 14
-      layers.Conv2DTranspose(32, kernel_size=3, strides=2, activation='relu', padding='valid'),# after: 20
-      layers.Conv2DTranspose(16, kernel_size=3, strides=2, activation='relu', padding='same'),# after: 40
-      layers.Conv2DTranspose(8, kernel_size=3, strides=2, activation='relu', padding='valid'),# after : 120
-      layers.Conv2D(3, kernel_size=2, activation='sigmoid', padding='same')])
+      layers.Dense(4*4*10, activation='relu'),
+      layers.Reshape((4, 4, 10)),
+      layers.Conv2DTranspose(10, kernel_size=2, strides=2, activation='relu', padding='same'),# after 14
+      layers.Conv2DTranspose(10, kernel_size=4, strides=2, activation='relu', padding='same'),# after: 20
+      layers.Conv2DTranspose(10, kernel_size=4, strides=2, activation='relu', padding='same'),# after: 40
+      layers.Conv2DTranspose(10, kernel_size=4, strides=1, activation='relu', padding='same'),# after : 120
+      layers.Conv2D(1, kernel_size=2, activation='sigmoid', padding='same')])
+
+  def call(self, x):
+    encoded = self.encoder(x)
+    decoded = self.decoder(encoded)
+    return decoded
+
+
+class QG_Convolutional_Autoencoder(Model):
+  def __init__(self, latent_dim):
+    super(Convolutional_Autoencoder2, self).__init__()
+
+    self.encoder = tf.keras.Sequential([
+      layers.Input(shape=(125, 125, 3)),
+      layers.Conv2D(10, kernel_size=6, strides=1, activation='relu', padding='valid'),
+      layers.Conv2D(10, kernel_size=3, strides=2, activation='relu', padding='same'),
+      layers.Conv2D(10, kernel_size=3, strides=2, activation='relu', padding='same'),
+      layers.Conv2D(10, kernel_size=3, strides=2, activation='relu', padding='same'),
+      layers.Flatten(),
+      layers.Dense(latent_dim*3, activation='relu'),
+      layers.Dense(latent_dim, activation='sigmoid')])
+
+    self.decoder = tf.keras.Sequential([
+      layers.Dense(latent_dim*3, activation='relu'),
+      layers.Dense(15*15*10, activation='relu'),
+      layers.Reshape((15, 15, 10)),
+      layers.Conv2DTranspose(10, kernel_size=3, strides=2, activation='relu', padding='same'),
+      layers.Conv2DTranspose(10, kernel_size=3, strides=2, activation='relu', padding='same'),
+      layers.Conv2DTranspose(10, kernel_size=3, strides=2, activation='relu', padding='same'),
+      layers.Conv2DTranspose(10, kernel_size=6, strides=2, activation='relu', padding='valid'),
+      layers.Conv2D(3, kernel_size=3, activation='sigmoid', padding='same')])
 
   def call(self, x):
     encoded = self.encoder(x)
@@ -94,13 +193,13 @@ class VAE(Model):
     def __init__(self, **kwargs):
         super(VAE, self).__init__(**kwargs)
 
-        latent_dim = 1
+        latent_dim = 15
 
         encoder_inputs = keras.Input(shape=(32, 32, 1))
         x = layers.Conv2D(32, 3, activation="relu", strides=2, padding="same")(encoder_inputs)
         x = layers.Conv2D(64, 3, activation="relu", strides=2, padding="same")(x)
         x = layers.Flatten()(x)
-        x = layers.Dense(16, activation="relu")(x)
+        x = layers.Dense(32, activation="relu")(x)
         z_mean = layers.Dense(latent_dim, name="z_mean")(x)
         z_log_var = layers.Dense(latent_dim, name="z_log_var")(x)
         z = Sampling()([z_mean, z_log_var])
