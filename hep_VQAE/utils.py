@@ -1,7 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import tensorflow as tf
+from matplotlib.colors import LogNorm
+from matplotlib import cm
+from sklearn.metrics import roc_auc_score, roc_curve
 
-def test_collapse(y_true, y_recon):
+def test_collapse(x_true, x_recon):
 
 
     #y_true_shuffle = np.copy(y_true)
@@ -10,20 +14,107 @@ def test_collapse(y_true, y_recon):
     #y_recon_shuffle = np.copy(y_recon)
     #np.random.shuffle(y_recon_shuffle)
 
-    p = np.random.permutation(y_true.shape[0])
-    y_true_shuffle = y_true[p]
-    y_recon_shuffle = y_recon[p]
+    p = np.random.permutation(x_true.shape[0])
+    x_true_shuffle = x_true[p]
+    x_recon_shuffle = x_recon[p]
 
-    true_diff = np.sum(np.abs(y_true - y_true_shuffle))
-    recon_diff = np.sum(np.abs(y_recon - y_recon_shuffle))
+    true_diff = np.sum(np.abs(x_true - x_true_shuffle))
+    recon_diff = np.sum(np.abs(x_recon - x_recon_shuffle))
     return recon_diff / true_diff
 
 
-def intensity_hist(y_true, y_recon):
-    y_true = y_true.flatten()
-    y_recon = y_recon.flatten()
+def intensity_hist(x_true, x_recon):
+    x_true = x_true.flatten()
+    x_recon = x_recon.flatten()
 
-    idx = np.argsort(y_true)
+    idx = np.argsort(x_true)
 
-    relatives = y_recon[idx] / y_true[idx]
+    relatives = x_recon[idx] / x_true[idx]
     return relatives
+
+def eval_recon(x_test, x_recon, lognorm=False):
+    x_test = x_test.reshape(x_test.shape[0], x_test.shape[1], x_test.shape[2],1)
+    x_recon = x_recon.reshape(x_recon.shape[0], x_recon.shape[1], x_recon.shape[2],1)
+
+    collapse_metric = test_collapse(x_test, x_recon)
+    ssim = tf.reduce_mean(tf.image.ssim(x_test.astype('float64'), x_recon.astype('float64'), max_val=1.0)).numpy()
+    MAE = tf.reduce_mean(tf.abs(x_test - x_recon)).numpy()
+    normalized_MAE = MAE / tf.reduce_mean(tf.reduce_sum(x_test,axis=(1,2)).numpy().reshape((x_test.shape[0],1,1,1))).numpy()
+
+    print(f'Collapse_metric: {collapse_metric:.3}')
+    print(f'ssim: {ssim:.3}')
+    print(f'MAE: {MAE:.3}')
+    print(f'normalized MAE: {normalized_MAE:.3}')
+
+    fig, axs = plt.subplots(2,3, figsize=(10, 5))
+
+    if lognorm:
+        norm = LogNorm()
+    else:
+        norm = None
+
+    for i in range(3):
+        rint = np.random.randint(len(x_test))
+        axs[0,i].imshow(x_test[rint], cmap='binary', norm=norm)
+        axs[0,i].title.set_text('true')
+
+        fig.colorbar(cm.ScalarMappable(norm=norm, cmap='binary'), ax=axs[0,i])
+
+        axs[1,i].imshow(x_recon[rint], cmap='binary', norm=norm)
+        axs[1,i].title.set_text('reconstructed')
+
+        fig.colorbar(cm.ScalarMappable(norm=norm, cmap='binary'), ax=axs[1,i])
+
+    fig.tight_layout()
+
+
+def eval_tagging(x_true_background, x_recon_background, x_true_signal, x_recon_signal):
+
+    x_true_background = x_true_background.reshape(x_true_background.shape[0], x_true_background.shape[1], x_true_background.shape[2],1)
+    x_recon_background = x_recon_background.reshape(x_recon_background.shape[0], x_recon_background.shape[1], x_recon_background.shape[2],1)
+    x_true_signal = x_true_signal.reshape(x_true_signal.shape[0], x_true_signal.shape[1], x_true_signal.shape[2],1)
+    x_recon_signal = x_recon_signal.reshape(x_recon_signal.shape[0], x_recon_signal.shape[1], x_recon_signal.shape[2],1)
+
+    #bce = tf.keras.losses.binary_crossentropy()
+    bce_background = tf.keras.losses.binary_crossentropy(x_true_background, x_recon_background, axis=(1,2,3)).numpy()
+    bce_signal = tf.keras.losses.binary_crossentropy(x_true_signal, x_recon_signal, axis=(1,2,3)).numpy()
+
+    fig, axs = plt.subplots(1,3, figsize=(11, 4))
+
+    print(f'Median background: {np.median(bce_background):.3}')
+    print(f'Median signal: {np.median(bce_signal):.3}')
+    bins = np.histogram(np.hstack((bce_background, bce_signal)), bins=25)[1]
+    axs[0].hist(bce_background, histtype='step', label="background",bins=bins)
+    axs[0].hist(bce_signal, histtype='step', label="signal",bins=bins)
+    axs[0].set_xlabel("loss")
+    axs[0].legend()
+
+    thresholds = np.linspace(0,max(np.max(bce_background),np.max(bce_signal)),1000)
+
+    accs = []
+    for i in thresholds:
+        num_background_right = np.sum(bce_background < i)
+        num_signal_right = np.sum(bce_signal > i)
+        acc = (num_background_right + num_signal_right)/(len(x_recon_background) + len(x_recon_signal))
+        accs.append(acc)
+
+    print(f'Maximum accuracy: {np.max(accs):.3}')
+    axs[1].plot(thresholds, accs)
+    axs[1].set_xlabel("anomaly threshold")
+    axs[1].set_ylabel("tagging accuracy")
+
+    y_true = np.append(np.zeros(len(bce_background)), np.ones(len(bce_signal)))
+    y_pred = np.append(bce_background, bce_signal)
+    auc = roc_auc_score(y_true, y_pred)
+    print(f'AUC: {auc:.3}')
+    fpr, tpr, thresholds = roc_curve(y_true, y_pred)
+    tnr = 1 - fpr
+    x = np.linspace(0,1,50)
+    y_rnd = 1 - x
+    axs[2].plot(tnr,tpr, label="anomaly tagging")
+    axs[2].plot(x,y_rnd, label="random tagging", color='grey')
+    axs[2].set_xlabel("fpr")
+    axs[2].set_ylabel("tpr")
+    axs[2].legend()
+
+    fig.tight_layout()
