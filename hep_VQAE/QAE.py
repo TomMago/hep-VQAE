@@ -18,22 +18,9 @@ class QAE_layer(tfq.layers.PQC):
         qbits = [cirq.GridQubit(0, i) for i in range(network_qbits + 1 + data_qbits)]
 
         model_circuit = self._build_circuit(qbits[:network_qbits], qbits[network_qbits:-1], data_qbits, latent_qbits, qbits[-1], layers)
-        #print(model_circuit)
         readout_operator = [cirq.Z(qbits[-1])]
         super().__init__(model_circuit, readout_operator)
 
-
-    #def _layer(self, qbits):
-    #    circ = cirq.Circuit()
-    #    for i in reversed(range(len(qbits)-1)):
-    #        circ += cirq.CNOT(qbits[i], qbits[i+1])
-    #    for i in range(len(qbits)):
-    #        circ += cirq.ry(sympy.symbols(f"q{self.parameters}")).on(qbits[i])
-    #        self.parameters += 1
-            #circ += cirq.rz(sympy.symbols(f"q{self.parameters}")).on(qbits[i])
-            #self.parameters += 1
-    #    return circ
-    
     def _layer(self, qbits):
         circ = cirq.Circuit()
         for i in range(len(qbits)):
@@ -42,8 +29,6 @@ class QAE_layer(tfq.layers.PQC):
         for i in range(len(qbits)):
             for j in range(i+1, len(qbits)):
                 circ += cirq.CNOT(qbits[i], qbits[j])
-            #circ += cirq.rz(sympy.symbols(f"q{self.parameters}")).on(qbits[i])
-            #self.parameters += 1
         return circ
 
 
@@ -53,10 +38,8 @@ class QAE_layer(tfq.layers.PQC):
             c += self._layer(network_qbits[:num_data_qbits])
         for i in range(layers):
             c += self._layer(network_qbits[num_data_qbits - num_latent_qbits:])
-        # SWAP Test
+        # swap test
         c += cirq.H(swap_qbit)
-        #for i, j in product(range(num_data_qbits), range(num_data_qbits - num_latent_qbits, len(network_qbits))):
-        #    c += cirq.ControlledGate(sub_gate=cirq.SWAP, num_controls=1).on(swap_qbit, reference_qbits[i], network_qbits[j])
         for i in range(num_data_qbits):
             c += cirq.ControlledGate(sub_gate=cirq.SWAP, num_controls=1).on(swap_qbit, reference_qbits[i], network_qbits[num_data_qbits - num_latent_qbits:][i])
         c += cirq.H(swap_qbit)
@@ -80,7 +63,7 @@ class QAE_model(Model):
 
         self.model = tf.keras.Sequential([
             tf.keras.layers.Input(shape=(), dtype=tf.string),
-            tfq.layers.PQC(self.model_circuit, readout_operator),
+            tfq.layers.PQC(model_circuit, readout_operator),
         ])
 
     def _layer(self, qbits):

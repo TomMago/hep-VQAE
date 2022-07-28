@@ -127,22 +127,10 @@ def lle_reduce(data, pca_components, val_data=None, test_data=None):
     return ret
 
 
-#def data_to_circuit(data):
-#     qubits = cirq.GridQubit.rect(1, len(data))
-#     values = np.ndarray.flatten(data).astype(np.float32)
-#     values = values * (2 * np.pi) - np.pi
-     # circuit = cirq.Circuit([cirq.X(q) ** v for v,q in zip(data, qubits) if not v==0])
-#     circuit = cirq.Circuit([cirq.X(q) ** v for v,q in zip(data, qubits)])
-#     return circuit
-
-
 def input_states(data, data_qbits, latent_qbits):
     network_qbits = data_qbits + (data_qbits - latent_qbits)
     qubits = cirq.GridQubit.rect(1, network_qbits + data_qbits + 1)
-    
-    #values = np.ndarray.flatten(data).astype(np.float32)
-    #values = (values + 1) / 2
-    #values = (data + 1)/2
+
     values = data
     
     data_circuit = cirq.Circuit([cirq.X(q) ** v for v,q in zip(values, qubits[:data_qbits])])

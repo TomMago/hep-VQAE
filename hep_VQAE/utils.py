@@ -4,15 +4,9 @@ import tensorflow as tf
 from matplotlib.colors import LogNorm
 from matplotlib import cm
 from sklearn.metrics import roc_auc_score, roc_curve
+import energyflow as ef
 
 def test_collapse(x_true, x_recon):
-
-
-    #y_true_shuffle = np.copy(y_true)
-    #np.random.shuffle(y_true_shuffle)
-    #
-    #y_recon_shuffle = np.copy(y_recon)
-    #np.random.shuffle(y_recon_shuffle)
 
     p = np.random.permutation(x_true.shape[0])
     x_true_shuffle = x_true[p]
@@ -37,11 +31,14 @@ def eval_recon(x_test, x_recon, lognorm=False):
     x_recon = x_recon.reshape(x_recon.shape[0], x_recon.shape[1], x_recon.shape[2],1)
 
     collapse_metric = test_collapse(x_test, x_recon)
+    emd = avg_emd(x_test, x_recon)
     ssim = tf.reduce_mean(tf.image.ssim(x_test.astype('float64'), x_recon.astype('float64'), max_val=1.0)).numpy()
     MAE = tf.reduce_mean(tf.abs(x_test - x_recon)).numpy()
     normalized_MAE = MAE / tf.reduce_mean(tf.reduce_sum(x_test,axis=(1,2)).numpy().reshape((x_test.shape[0],1,1,1))).numpy()
 
+
     print(f'Collapse_metric: {collapse_metric:.3}')
+    print(f'Average EMD: {emd:.3}')
     print(f'ssim: {ssim:.3}')
     print(f'MAE: {MAE:.3}')
     print(f'normalized MAE: {normalized_MAE:.3}')
@@ -75,7 +72,6 @@ def eval_tagging(x_true_background, x_recon_background, x_true_signal, x_recon_s
     x_true_signal = x_true_signal.reshape(x_true_signal.shape[0], x_true_signal.shape[1], x_true_signal.shape[2],1)
     x_recon_signal = x_recon_signal.reshape(x_recon_signal.shape[0], x_recon_signal.shape[1], x_recon_signal.shape[2],1)
 
-    #bce = tf.keras.losses.binary_crossentropy()
     bce_background = tf.keras.losses.binary_crossentropy(x_true_background, x_recon_background, axis=(1,2,3)).numpy()
     bce_signal = tf.keras.losses.binary_crossentropy(x_true_signal, x_recon_signal, axis=(1,2,3)).numpy()
 
@@ -118,3 +114,32 @@ def eval_tagging(x_true_background, x_recon_background, x_true_signal, x_recon_s
     axs[2].legend()
 
     fig.tight_layout()
+
+
+def img_to_event(img):
+    x_dim, y_dim = img.shape
+    y_pos = np.indices((x_dim, y_dim))[0]
+    x_pos = np.indices((x_dim, y_dim))[1]
+    stacked = np.dstack((img, x_pos, y_pos))
+    stacked = stacked.reshape((x_dim*y_dim, 3))
+    stacked = stacked[stacked[:,0]!=0]
+    return stacked
+
+def img_emd(img1, img2, R=0.4):
+    return ef.emd.emd(img_to_event(img1.reshape((img1.shape[0],img1.shape[1]))), img_to_event(img2.reshape((img2.shape[0],img2.shape[1]))), R=R)
+
+def avg_emd(x_true, x_recon, R=0.4):
+    return np.mean([img_emd(x,y) for x,y in zip(x_true, x_recon)])
+
+def imgs_to_events(imgs):
+    x_dim, y_dim = imgs.shape[1], imgs.shape[2]
+    y_pos = np.indices((x_dim, y_dim))[0]
+    x_pos = np.indices((x_dim, y_dim))[1]
+    y_posN = np.repeat(y_pos.reshape((1,x_dim,y_dim)), imgs.shape[0], axis=0)
+    x_posN = np.repeat(x_pos.reshape((1,x_dim,y_dim)), imgs.shape[0], axis=0)
+    stacked = np.stack((imgs, x_pos, y_pos), axis=3)
+    stacked = stacked.reshape((imgs.shape[0], x_dim*y_dim, 3))
+    Gs = []
+    for event in stacked:
+        Gs.append(event[event[:,0]!=0])
+    return Gs

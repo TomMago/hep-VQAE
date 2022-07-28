@@ -149,26 +149,32 @@ class Convolutional_Autoencoder3(Model):
 
 class QG_Convolutional_Autoencoder(Model):
   def __init__(self, latent_dim):
-    super(Convolutional_Autoencoder2, self).__init__()
+    super(QG_Convolutional_Autoencoder, self).__init__()
 
     self.encoder = tf.keras.Sequential([
       layers.Input(shape=(125, 125, 3)),
-      layers.Conv2D(10, kernel_size=6, strides=1, activation='relu', padding='valid'),
-      layers.Conv2D(10, kernel_size=3, strides=2, activation='relu', padding='same'),
-      layers.Conv2D(10, kernel_size=3, strides=2, activation='relu', padding='same'),
-      layers.Conv2D(10, kernel_size=3, strides=2, activation='relu', padding='same'),
+      layers.Conv2D(16, kernel_size=6, strides=1, activation='relu', padding='same'),
+      layers.Conv2D(16, kernel_size=6, strides=1, activation='relu', padding='valid'),
+      layers.Conv2D(32, kernel_size=3, strides=2, activation='relu', padding='same'),
+      layers.Conv2D(32, kernel_size=3, strides=1, activation='relu', padding='same'),
+      layers.Conv2D(64, kernel_size=3, strides=2, activation='relu', padding='same'),
+      layers.Conv2D(64, kernel_size=3, strides=1, activation='relu', padding='same'),
+      layers.Conv2D(30, kernel_size=3, strides=2, activation='relu', padding='same'),
       layers.Flatten(),
-      layers.Dense(latent_dim*3, activation='relu'),
+      layers.Dense(latent_dim//0.75, activation='relu'),
       layers.Dense(latent_dim, activation='sigmoid')])
 
     self.decoder = tf.keras.Sequential([
-      layers.Dense(latent_dim*3, activation='relu'),
-      layers.Dense(15*15*10, activation='relu'),
-      layers.Reshape((15, 15, 10)),
-      layers.Conv2DTranspose(10, kernel_size=3, strides=2, activation='relu', padding='same'),
-      layers.Conv2DTranspose(10, kernel_size=3, strides=2, activation='relu', padding='same'),
-      layers.Conv2DTranspose(10, kernel_size=3, strides=2, activation='relu', padding='same'),
-      layers.Conv2DTranspose(10, kernel_size=6, strides=2, activation='relu', padding='valid'),
+      layers.Dense(latent_dim//0.75, activation='relu'),
+      layers.Dense(15*15*30, activation='relu'),
+      layers.Reshape((15, 15, 30)),
+      layers.Conv2DTranspose(30, kernel_size=3, strides=2, activation='relu', padding='same'),
+      layers.Conv2DTranspose(64, kernel_size=3, strides=2, activation='relu', padding='same'),
+      layers.Conv2DTranspose(64, kernel_size=3, strides=1, activation='relu', padding='same'),
+      layers.Conv2DTranspose(32, kernel_size=3, strides=2, activation='relu', padding='same'),
+      layers.Conv2DTranspose(32, kernel_size=3, strides=1, activation='relu', padding='same'),
+      layers.Conv2DTranspose(16, kernel_size=6, strides=1, activation='relu', padding='valid'),
+      layers.Conv2DTranspose(16, kernel_size=6, strides=1, activation='relu', padding='same'),
       layers.Conv2D(3, kernel_size=3, activation='sigmoid', padding='same')])
 
   def call(self, x):
