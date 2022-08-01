@@ -1,10 +1,12 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import tensorflow as tf
-from matplotlib.colors import LogNorm
-from matplotlib import cm
-from sklearn.metrics import roc_auc_score, roc_curve
 import energyflow as ef
+import matplotlib.pyplot as plt
+import numpy as np
+import tensorflow as tf
+from matplotlib import cm
+from matplotlib.colors import LogNorm
+from sklearn.ensemble import IsolationForest
+from sklearn.metrics import roc_auc_score, roc_curve
+
 
 def test_collapse(x_true, x_recon):
 
@@ -101,6 +103,53 @@ def eval_tagging(x_true_background, x_recon_background, x_true_signal, x_recon_s
 
     y_true = np.append(np.zeros(len(bce_background)), np.ones(len(bce_signal)))
     y_pred = np.append(bce_background, bce_signal)
+    auc = roc_auc_score(y_true, y_pred)
+    print(f'AUC: {auc:.3}')
+    fpr, tpr, thresholds = roc_curve(y_true, y_pred)
+    tnr = 1 - fpr
+    x = np.linspace(0,1,50)
+    y_rnd = 1 - x
+    axs[2].plot(tnr,tpr, label="anomaly tagging")
+    axs[2].plot(x,y_rnd, label="random tagging", color='grey')
+    axs[2].set_xlabel("fpr")
+    axs[2].set_ylabel("tpr")
+    axs[2].legend()
+
+    fig.tight_layout()
+
+def iforest_latent_eval(background_latent, signal_latent):
+
+    clf = IsolationForest(random_state=0).fit(background_latent)
+
+    if_pred_bg = clf.decision_function(background_latent)
+    if_pred_signal = clf.decision_function(signal_latent)
+
+    fig, axs = plt.subplots(1,3, figsize=(11, 4))
+
+    print(f'Median background: {np.median(if_pred_bg):.3}')
+    print(f'Median signal: {np.median(if_pred_signal):.3}')
+    bins = np.histogram(np.hstack((if_pred_bg, if_pred_signal)), bins=25)[1]
+    axs[0].hist(if_pred_bg, histtype='step', label="background",bins=bins)
+    axs[0].hist(if_pred_signal, histtype='step', label="signal",bins=bins)
+    axs[0].set_xlabel("loss")
+    axs[0].legend()
+
+    thresholds = np.linspace(-0.4,max(np.max(if_pred_bg),np.max(if_pred_signal)),1000)
+
+    accs = []
+    for i in thresholds:
+        num_background_right = np.sum(if_pred_bg > i)
+        num_signal_right = np.sum(if_pred_signal < i)
+        acc = (num_background_right + num_signal_right)/(len(if_pred_bg) + len(if_pred_signal))
+        accs.append(acc)
+
+    print(f'Maximum accuracy: {np.max(accs):.3}')
+    axs[1].plot(thresholds, accs)
+    axs[1].set_xlabel("anomaly threshold")
+    axs[1].set_ylabel("tagging accuracy")
+
+    y_true = np.append(np.ones(len(if_pred_bg)), np.zeros(len(if_pred_signal)))
+    y_pred = np.append(if_pred_bg, if_pred_signal)
     auc = roc_auc_score(y_true, y_pred)
     print(f'AUC: {auc:.3}')
     fpr, tpr, thresholds = roc_curve(y_true, y_pred)
