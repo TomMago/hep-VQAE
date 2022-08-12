@@ -20,6 +20,7 @@ def test_collapse(x_true, x_recon):
 
 
 def intensity_hist(x_true, x_recon):
+
     x_true = x_true.flatten()
     x_recon = x_recon.flatten()
 
@@ -28,7 +29,9 @@ def intensity_hist(x_true, x_recon):
     relatives = x_recon[idx] / x_true[idx]
     return relatives
 
+
 def eval_recon(x_test, x_recon, lognorm=False):
+
     x_test = x_test.reshape(x_test.shape[0], x_test.shape[1], x_test.shape[2],1)
     x_recon = x_recon.reshape(x_recon.shape[0], x_recon.shape[1], x_recon.shape[2],1)
 
@@ -37,7 +40,6 @@ def eval_recon(x_test, x_recon, lognorm=False):
     ssim = tf.reduce_mean(tf.image.ssim(x_test.astype('float64'), x_recon.astype('float64'), max_val=1.0)).numpy()
     MAE = tf.reduce_mean(tf.abs(x_test - x_recon)).numpy()
     normalized_MAE = MAE / tf.reduce_mean(tf.reduce_sum(x_test,axis=(1,2)).numpy().reshape((x_test.shape[0],1,1,1))).numpy()
-
 
     print(f'Collapse_metric: {collapse_metric:.3}')
     print(f'Average EMD: {emd:.3}')
@@ -117,6 +119,7 @@ def eval_tagging(x_true_background, x_recon_background, x_true_signal, x_recon_s
 
     fig.tight_layout()
 
+
 def iforest_latent_eval(background_latent, signal_latent):
 
     clf = IsolationForest(random_state=0).fit(background_latent)
@@ -174,11 +177,14 @@ def img_to_event(img):
     stacked = stacked[stacked[:,0]!=0]
     return stacked
 
+
 def img_emd(img1, img2, R=0.4):
     return ef.emd.emd(img_to_event(img1.reshape((img1.shape[0],img1.shape[1]))), img_to_event(img2.reshape((img2.shape[0],img2.shape[1]))), R=R)
 
+
 def avg_emd(x_true, x_recon, R=0.4):
     return np.mean([img_emd(x,y) for x,y in zip(x_true, x_recon)])
+
 
 def imgs_to_events(imgs):
     x_dim, y_dim = imgs.shape[1], imgs.shape[2]
