@@ -106,7 +106,7 @@ def eval_tagging(x_true_background, x_recon_background, x_true_signal, x_recon_s
     y_true = np.append(np.zeros(len(bce_background)), np.ones(len(bce_signal)))
     y_pred = np.append(bce_background, bce_signal)
     auc = roc_auc_score(y_true, y_pred)
-    print(f'AUC: {auc:.3}')
+    print(f'AUC: {auc:.4}')
     fpr, tpr, thresholds = roc_curve(y_true, y_pred)
     tnr = 1 - fpr
     x = np.linspace(0,1,50)
