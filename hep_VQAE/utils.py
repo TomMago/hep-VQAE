@@ -1,3 +1,7 @@
+"""
+Utility functions mainly for data preperation and evaluation
+"""
+
 import energyflow as ef
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,7 +13,15 @@ from sklearn.metrics import roc_auc_score, roc_curve
 
 
 def test_collapse(x_true, x_recon):
+    """Test for mode collapse. Ratio of the difference of reconstructed and true images. Bad sign if close to zero
 
+    Args:
+        x_true (array): True images
+        x_recon (array): reconstructed image
+
+    Returns:
+        Value to check the for mode collapse, small values are worse
+    """
     p = np.random.permutation(x_true.shape[0])
     x_true_shuffle = x_true[p]
     x_recon_shuffle = x_recon[p]
@@ -20,7 +32,15 @@ def test_collapse(x_true, x_recon):
 
 
 def intensity_hist(x_true, x_recon):
+    """Compute list of ratios of intensity reconstruction
 
+    Args:
+        x_true (array): True images
+        x_recon (array): reconstructed image
+
+    Returns:
+        list of ratios of intensity reconstruction sorted by the intesity of the true image
+    """
     x_true = x_true.flatten()
     x_recon = x_recon.flatten()
 
@@ -31,7 +51,16 @@ def intensity_hist(x_true, x_recon):
 
 
 def eval_recon(x_test, x_recon, lognorm=False):
+    """Evaluate the reconstruction capabilities of an autoencoder
 
+    Args:
+        x_true (array): True images
+        x_recon (array): reconstructed image
+        lognorm (bool): use logarithmic norm for example images
+
+    Returns:
+        evaluation plots
+    """
     x_test = x_test.reshape(x_test.shape[0], x_test.shape[1], x_test.shape[2],1)
     x_recon = x_recon.reshape(x_recon.shape[0], x_recon.shape[1], x_recon.shape[2],1)
 
@@ -70,7 +99,17 @@ def eval_recon(x_test, x_recon, lognorm=False):
 
 
 def eval_tagging(x_true_background, x_recon_background, x_true_signal, x_recon_signal):
+    """Evaluate the anomaly tagging capabilities of an autoencoder
 
+    Args:
+        x_true_background (array): True images of background events
+        x_recon_background (array): reconstructed images of background events
+        x_true_signal (array): True images of signal events
+        x_recon_signal (array): reconstructed images of signal events
+
+    Returns:
+        Plots for tagging evaluation
+    """
     x_true_background = x_true_background.reshape(x_true_background.shape[0], x_true_background.shape[1], x_true_background.shape[2],1)
     x_recon_background = x_recon_background.reshape(x_recon_background.shape[0], x_recon_background.shape[1], x_recon_background.shape[2],1)
     x_true_signal = x_true_signal.reshape(x_true_signal.shape[0], x_true_signal.shape[1], x_true_signal.shape[2],1)
@@ -121,7 +160,15 @@ def eval_tagging(x_true_background, x_recon_background, x_true_signal, x_recon_s
 
 
 def iforest_latent_eval(background_latent, signal_latent):
+    """Evaluate the anomaly tagging capabilities by using an isolation forest on the latent space representations
 
+    Args:
+        background_latent (array): latent representation of bg events
+        signal_latent (array): latent represnation of signal events
+
+    Returns:
+        Plots for tagging evaluation
+    """
     clf = IsolationForest(random_state=0).fit(background_latent)
 
     if_pred_bg = clf.decision_function(background_latent)
@@ -169,6 +216,14 @@ def iforest_latent_eval(background_latent, signal_latent):
 
 
 def img_to_event(img):
+    """Convert event image to event format for energyflow (list of non zero pixels with position and intensity as features)
+
+    Args:
+        img (array): single jet image
+
+    Returns:
+        jet event as 2d np array
+    """
     x_dim, y_dim = img.shape
     y_pos = np.indices((x_dim, y_dim))[0]
     x_pos = np.indices((x_dim, y_dim))[1]
@@ -179,14 +234,42 @@ def img_to_event(img):
 
 
 def img_emd(img1, img2, R=0.4):
+    """Compute EMD for two images
+
+    Args:
+        img1 (array): first event image
+        img2 (array): second event image
+        R (float): Radius for emd computation
+
+    Returns:
+        EMD
+    """
     return ef.emd.emd(img_to_event(img1.reshape((img1.shape[0],img1.shape[1]))), img_to_event(img2.reshape((img2.shape[0],img2.shape[1]))), R=R)
 
 
 def avg_emd(x_true, x_recon, R=0.4):
+    """Compute Average EMD for batch of images
+
+    Args:
+        x_true (array): batch of true event images
+        x_recon (array): batch of reconstructed event images
+        R (float): Radius for emd computation
+
+    Returns:
+        avg EMD
+    """
     return np.mean([img_emd(x,y) for x,y in zip(x_true, x_recon)])
 
 
 def imgs_to_events(imgs):
+    """Convert batch of event images to event format for energyflow (list of non zero pixels with position and intensity as features)
+
+    Args:
+        img (array): batch of jet images
+
+    Returns:
+        batch of jet events as 3d np array
+    """
     x_dim, y_dim = imgs.shape[1], imgs.shape[2]
     y_pos = np.indices((x_dim, y_dim))[0]
     x_pos = np.indices((x_dim, y_dim))[1]

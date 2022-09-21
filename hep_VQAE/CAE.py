@@ -1,7 +1,8 @@
+"""
+Collections of some classical autoencoders to compare to
+"""
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
-import sympy
 import tensorflow as tf
 import tensorflow.keras as keras
 from sklearn.metrics import accuracy_score, precision_score, recall_score
