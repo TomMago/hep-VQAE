@@ -44,14 +44,13 @@ I used MNIST images for a first validation of ideas and debugging code samples.
 
 The Electron Photon dataset contrain 28x28 ecal images of electrons and photons.
 
-[average image of electrons and photons](assets/gammae.png)
+<img src="assets/gammae.png">
 
 #### Quark Gluon
 
 The Quark Gluon dataset was my main object of study. For the most part, I rescaled the data to 12x12 in order to be able to simulate the demanding quantum algorithms. The original dataset contains a tracks, ECAL and HCAL channel, however for simplicity I only focus on the ECAL channel.
 
-[average image of electrons and photons](assets/gammae.png)
-
+<img src="assets/gammae.png">
 
 ### Architectures
 
@@ -63,7 +62,8 @@ However my main focus was on the two following:
 The fully Quantum Autoencoder (I abbreviate it as SQAE - Simple Quantum AutoEncoder) is based on [1] and [2].
 The SQAE is structured as follows:
 
-[average image of electrons and photons](assets/qae.png)
+<img src="assets/qae.png">
+
 
 The classical data is encoded with some unitarity and a parametrized unitarity is applied.
 A SWAP-test computes the fidelity between the non-latent qbits and some trash qbits, which is then measured at the readout bit.
