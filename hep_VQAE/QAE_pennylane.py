@@ -77,9 +77,10 @@ class baseSQAE:
 
         """
 
-        for indx, i in enumerate(range(self.data_qbits, self.data_qbits + self.trash_qbits)):
-            #qml.RX(self.rnd_init[indx], wires=i)
-            qml.Hadamard(wires=i)
+        # choose trash initialization
+        #for indx, i in enumerate(range(self.data_qbits, self.data_qbits + self.trash_qbits)):
+        #    qml.RX(self.rnd_init[indx], wires=i)
+        #    qml.Hadamard(wires=i)
 
         self.encoder(params, data)
 
@@ -191,7 +192,7 @@ class baseSQAE:
                 if j % print_step_size == 0 and not j == 0:
                     end_b = time.time()
                     loss = self.cost_batch(self.params, Xbatch)
-                    print(f"Step: {j:<7} | Loss: {loss:<10.3} | avg step time {(end_b - start_b) / print_step_size :.3} | {np.mean(self.params)}")
+                    print(f"Step: {j:<7} | Loss: {loss:<10.3} | avg step time {(end_b - start_b) / print_step_size :.3} | avg gradient {np.mean(self.params):.3}")
                     start_b = time.time()
                     if make_animation:
                         filename = f'imgs/animation_{len(self.animation_filenames) + 1}.png'
