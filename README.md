@@ -58,13 +58,13 @@ I used MNIST images for a first validation of ideas and debugging code samples.
 
 The Electron Photon dataset contrain 32x32 ECAL images of electrons and photons.
 
-<img src="assets/gammae.png" widht="400px" height="auto">
+<img src="assets/gammae.png" width="400px" height="auto">
 
 #### Quark Gluon
 
 The Quark Gluon dataset was my main object of study. For the most part, I rescaled the data to 12x12 in order to be able to simulate the demanding quantum algorithms. The original dataset contains a tracks, ECAL and HCAL channel, however for simplicity I only focus on the ECAL channel.
 
-<img src="assets/quarkgluon.png" widht="400px" height="auto">
+<img src="assets/quarkgluon.png" width="400px" height="auto">
 
 ### Models
 
@@ -76,7 +76,7 @@ However my main focus was on the two following:
 The fully Quantum Autoencoder (I abbreviate it as SQAE - Simple Quantum AutoEncoder) is based on [[1]](##References) and [[2]](##References).
 The SQAE is structured as follows:
 
-<img src="assets/qae.png" widht="700px" height="auto">
+<img src="assets/qae.png" width="700px" height="auto">
 
 The classical data is encoded with some unitarity and a parametrized unitarity is applied.
 A SWAP-test computes the fidelity between the non-latent qubits and some trash qubits, which is then measured at the readout bit.
@@ -87,7 +87,7 @@ The SQAE is trained by maximizing the fidelity between non-latent qubits and the
 
 As a second approach I wanted to try a hybrid architecture, to combine QML with the strength of classical Deep learning. In particular I wanted to use classical CNNs to reduce the dimension of the data before feeding it into a PQC. Schematically the Hybrid Autoencoder (HAE) looks like this:
 
-<img src="assets/hae.png" widht="700px" height="auto">
+<img src="assets/hae.png" width="700px" height="auto">
 
 The HAE is optimized using a classical reconstruction loss.
 
