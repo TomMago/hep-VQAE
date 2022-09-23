@@ -46,6 +46,8 @@ class baseSQAE:
 
         self.params = np.random.uniform(size=self.parameters_shape, requires_grad=True)
 
+        self.rnd_init = np.random.uniform(0, np.pi, size=self.trash_qbits, requires_grad=False)
+
     def encoder(self, params, data):
         """Builds encoder circuit
 
@@ -74,13 +76,10 @@ class baseSQAE:
             expectation value of readout bit
 
         """
-        rnd_init1 = np.random.uniform(0, np.pi, size=self.trash_qbits)
-        rnd_init2 = np.random.uniform(0, np.pi, size=self.trash_qbits)
-        rnd_init3 = np.random.uniform(0, np.pi, size=self.trash_qbits)
+
         for indx, i in enumerate(range(self.data_qbits, self.data_qbits + self.trash_qbits)):
-            qml.RZ(rnd_init1[indx], wires=i)
-            qml.RY(rnd_init2[indx], wires=i)
-            qml.RZ(rnd_init3[indx], wires=i)
+            #qml.RX(self.rnd_init[indx], wires=i)
+            qml.Hadamard(wires=i)
 
         self.encoder(params, data)
 

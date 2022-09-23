@@ -1,6 +1,7 @@
 # Quantum Autoencoders for HEP Analysis at the LHC
 
-The code for the [QAE project](https://summerofcode.withgoogle.com/programs/2022/projects/ePnjKlJs). The original repo can be found [here](https://github.com/TomMago/hep-VQAE). In addition, more details can be found in my [post about the project](https://www.tommago.com).
+The code for the [QAE GSoC project](https://summerofcode.withgoogle.com/programs/2022/projects/ePnjKlJs). The original repo can be found [here](https://github.com/TomMago/hep-VQAE). In addition, more details can be found in my [post about the project](https://www.tommago.com/posts/gsoc/).
+Big thank you to Sergei Gleyzer for the supervision and support.
 
 ## Contents
 
@@ -13,7 +14,9 @@ The code for the [QAE project](https://summerofcode.withgoogle.com/programs/2022
   - [Models](#Models)
     - [Fully Quantum Autoencoder](#Fully-Quantum-Autoencoder)
     - [Hybrid Quantum Autoencoder](#Hybrid-Quantum-Autoencoder)
-- [Code structure](#Code-structure) 
+- [Code](#Code-structure)
+  - [Structure](#Code-structure)
+  - [Training](#Training)
 - [References](#References)
 
 ## Setup
@@ -58,13 +61,15 @@ I used MNIST images for a first validation of ideas and debugging code samples.
 
 The Electron Photon dataset contrain 32x32 ECAL images of electrons and photons.
 
-<img src="assets/gammae.png" width="400px" height="auto">
+<img src="assets/gammae.png" width="350px" height="auto">
 
 #### Quark Gluon
 
-The Quark Gluon dataset was my main object of study. For the most part, I rescaled the data to 12x12 in order to be able to simulate the demanding quantum algorithms. The original dataset contains a tracks, ECAL and HCAL channel, however for simplicity I only focus on the ECAL channel.
+The Quark Gluon dataset was my main object of study. It contains Tracks, ECAL and HCAL images for Quark and Gluon initiated jets respectively. For the most part, I rescaled the data to 12x12 in order to be able to simulate the demanding quantum algorithms and only used the ECAL channel. I included a little script to rescale the original data in the notebooks folder. If you want to get access to the dataset feel free to [contact me](mailto:tommagorsch@gmail.com) or someone from [ML4SCI](https://ml4sci.org/gsoc/2021/mentors.html).
 
-<img src="assets/quarkgluon.png" width="400px" height="auto">
+<img src="assets/quarkgluon.png" width="350px" height="auto">
+
+An interesting feature of this dataset is the different complexity of the two jets. Since Gluon intiated jets display a larger intrinsic dimensionality, a classical CNN can only spot them as anomalies when trained on the Quark jets. However it des not work the other way around, so a CNN autoencoder trained on the Gluon jets won't spot the Quark jet anomalies, as it learned to reconstruct the "more challenging" Gluon jets. For more details on this check out the [blog post](https://www.tommago.com/posts/gsoc/). 
 
 ### Models
 
@@ -76,7 +81,7 @@ However my main focus was on the two following:
 The fully Quantum Autoencoder (I abbreviate it as SQAE - Simple Quantum AutoEncoder) is based on [[1]](##References) and [[2]](##References).
 The SQAE is structured as follows:
 
-<img src="assets/qae.png" width="700px" height="auto">
+<img src="assets/qae.png" width="450px" height="auto">
 
 The classical data is encoded with some unitarity and a parametrized unitarity is applied.
 A SWAP-test computes the fidelity between the non-latent qubits and some trash qubits, which is then measured at the readout bit.
@@ -87,25 +92,34 @@ The SQAE is trained by maximizing the fidelity between non-latent qubits and the
 
 As a second approach I wanted to try a hybrid architecture, to combine QML with the strength of classical Deep learning. In particular I wanted to use classical CNNs to reduce the dimension of the data before feeding it into a PQC. Schematically the Hybrid Autoencoder (HAE) looks like this:
 
-<img src="assets/hae.png" width="700px" height="auto">
+<img src="assets/hae.png" width="450px" height="auto">
 
 The HAE is optimized using a classical reconstruction loss.
 
-## Code structure
+## Code
 
-- **data**
+### Structure
+
+- **data**:  
 The notebooks expect the respective data to be stored in the data directory.
 
-- **hep_VQAE**
+- **hep_VQAE**:  
 The main code can be found in the package hep_VQAE. There are implementations for the purely quantum autoencoder in pennylane and tf-quantum.
 Furthermore there are classical and hybrid models as well as auxiliary functions for data preprocessing and evaluation.
     
-- **notebooks**
+- **notebooks**:  
 The notebooks folder contain example applications of the different models to the datasets. These notebooks are commented to walk through the training.
 
-- **dev_notebooks**
+- **dev_notebooks**:  
 The dev_notebooks folder on the other hand contains a lot of code and experiments I conducted throughout the project. There are experiments with classical Autoencoders, Jax implementations, vision transformers, different experiments with quantum convolutional circuits and much more. However this code is less documented, but I wanted to include it, maybe there is something someone might find useful in the future.
 
+### Training
+
+Training these quantum models can take quite some time, as the circuit simulations are very demanding.
+I therefore recommend to use [pennylane](https://pennylane.ai) with the [lightning.gpu](https://github.com/PennyLaneAI/pennylane-lightning-gpu) plugin as backend. lightning.gpu is build on NVIDIAs new [cuQuantum](https://github.com/NVIDIA/cuQuantum) simulation framework and provides fast simulation on gpus.
+However note, that cuQuantum only supports newer GPUs.
+In addition to differentiate in the simulations it is recommended to use the adjoint differentiation method as it is the fastest.
+Adjoint differentiation is supported by lightning.gpu, however make sure that you have a GPU with sufficient memory, as depending on the model this can be a constraint.
 
 ## References
 
