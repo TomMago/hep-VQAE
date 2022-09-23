@@ -1,6 +1,20 @@
-# Quantum Variational Autoencoders for HEP Analysis at the LHC
+# Quantum Autoencoders for HEP Analysis at the LHC
 
 The code for the [QAE project](https://summerofcode.withgoogle.com/programs/2022/projects/ePnjKlJs). The original repo can be found [here](https://github.com/TomMago/hep-VQAE). In addition, more details can be found in my [post about the project](https://www.tommago.com).
+
+## Contents
+
+- [Setup](##Setup)
+- [Project](##Project)
+  - [Datasets](###Datasets)
+    - [MNIST](####MNIST)
+    - [Electron Photon](####Electron Photon)
+    - [Quark Gluon](####Quark Gluon)
+  - [Models](###Models)  
+    - [Fully Quantum Autoencoder](####Fully Quantum Autoencoder)
+    - [Hybrid Quantum Autoencoder](####Hybrid Quantum Autoencoder)
+- [Code structure](##Code structure) 
+- [References](##References)
 
 ## Setup
 
@@ -44,25 +58,25 @@ I used MNIST images for a first validation of ideas and debugging code samples.
 
 The Electron Photon dataset contrain 32x32 ECAL images of electrons and photons.
 
-<img src="assets/gammae.png">
+<img src="assets/gammae.png" widht="400px" height="auto">
 
 #### Quark Gluon
 
 The Quark Gluon dataset was my main object of study. For the most part, I rescaled the data to 12x12 in order to be able to simulate the demanding quantum algorithms. The original dataset contains a tracks, ECAL and HCAL channel, however for simplicity I only focus on the ECAL channel.
 
-<img src="assets/quarkgluon.png">
+<img src="assets/quarkgluon.png" widht="400px" height="auto">
 
-### Architectures
+### Models
 
 In my project I implemented and tried many different architectures.
 However my main focus was on the two following:
 
 #### Fully Quantum Autoencoder
 
-The fully Quantum Autoencoder (I abbreviate it as SQAE - Simple Quantum AutoEncoder) is based on [[1]](#References) and [[2]](#References).
+The fully Quantum Autoencoder (I abbreviate it as SQAE - Simple Quantum AutoEncoder) is based on [[1]](##References) and [[2]](##References).
 The SQAE is structured as follows:
 
-<img src="assets/qae.png">
+<img src="assets/qae.png" widht="700px" height="auto">
 
 The classical data is encoded with some unitarity and a parametrized unitarity is applied.
 A SWAP-test computes the fidelity between the non-latent qubits and some trash qubits, which is then measured at the readout bit.
@@ -73,23 +87,27 @@ The SQAE is trained by maximizing the fidelity between non-latent qubits and the
 
 As a second approach I wanted to try a hybrid architecture, to combine QML with the strength of classical Deep learning. In particular I wanted to use classical CNNs to reduce the dimension of the data before feeding it into a PQC. Schematically the Hybrid Autoencoder (HAE) looks like this:
 
-<img src="assets/hae.png">
+<img src="assets/hae.png" widht="700px" height="auto">
 
 The HAE is optimized using a classical reconstruction loss.
 
 ## Code structure
 
+- **data**
 The notebooks expect the respective data to be stored in the data directory.
 
+- **hep_VQAE**
 The main code can be found in the package hep_VQAE. There are implementations for the purely quantum autoencoder in pennylane and tf-quantum.
-Furhtermore there are classical and hybrid models as well as auxiliary functions for data preprocessing and evaluation.
+Furthermore there are classical and hybrid models as well as auxiliary functions for data preprocessing and evaluation.
+    
+- **notebooks**
+The notebooks folder contain example applications of the different models to the datasets. These notebooks are commented to walk through the training.
 
-The notebooks folder contain example applications of the different models to the datasets. These notebooks are commented to walk you through the training.
+- **dev_notebooks**
+The dev_notebooks folder on the other hand contains a lot of code and experiments I conducted throughout the project. There are experiments with classical Autoencoders, Jax implementations, vision transformers, different experiments with quantum convolutional circuits and much more. However this code is less documented, but I wanted to include it, maybe there is something someone might find useful in the future.
 
-The dev_notebooks folder on the other hand contains a lot of code and experiments I conducted throughout the project. There are experiments with classical Autoencoders, Jax implementations, vision transformers, different experiments with quantum convolutional circuits and much more. However this code is less documented. However I wanted to include it, maybe there is something someone might find useful in the future.
 
-
-# References
+## References
 
 [1] Romero, J., Olson, J. P., & Aspuru-Guzik, A. (2017). Quantum autoencoders for efficient compression of quantum data. Quantum Science and Technology, 2(4), 045001.
 
