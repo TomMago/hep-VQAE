@@ -4,17 +4,17 @@ The code for the [QAE project](https://summerofcode.withgoogle.com/programs/2022
 
 ## Contents
 
-- [Setup](##Setup)
-- [Project](##Project)
-  - [Datasets](###Datasets)
-    - [MNIST](####MNIST)
-    - [Electron Photon](####Electron Photon)
-    - [Quark Gluon](####Quark Gluon)
-  - [Models](###Models)  
-    - [Fully Quantum Autoencoder](####Fully Quantum Autoencoder)
-    - [Hybrid Quantum Autoencoder](####Hybrid Quantum Autoencoder)
-- [Code structure](##Code structure) 
-- [References](##References)
+- [Setup](#Setup)
+- [Project](#Project)
+  - [Datasets](#Datasets)
+    - [MNIST](#MNIST)
+    - [Electron Photon](#Electron-Photon)
+    - [Quark Gluon](#Quark-Gluon)
+  - [Models](#Models)
+    - [Fully Quantum Autoencoder](#Fully-Quantum-Autoencoder)
+    - [Hybrid Quantum Autoencoder](#Hybrid-Quantum-Autoencoder)
+- [Code structure](#Code-structure) 
+- [References](#References)
 
 ## Setup
 
